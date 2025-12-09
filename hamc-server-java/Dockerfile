@@ -50,9 +50,9 @@ RUN set -eux; \
     : "${BUILD_ARCH:=${TARGETARCH}}"; \
     if [ -z "${BUILD_ARCH}" ]; then BUILD_ARCH="$(uname -m)"; fi; \
     case "${BUILD_ARCH}" in \
-        amd64|x86_64) playit_arch="amd64" ;; \
-        aarch64|arm64) playit_arch="arm64" ;; \
-        armv7|arm) playit_arch="arm" ;; \
+        amd64|x86_64|x86-64|x64) playit_arch="amd64" ;; \
+        aarch64|arm64|armv8*|aarch64_be) playit_arch="arm64" ;; \
+        armv7*|armhf|arm) playit_arch="arm" ;; \
         *) echo "Unsupported architecture: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac; \
     curl -L -o /usr/local/bin/playit "https://github.com/playit-cloud/playit-agent/releases/${PLAYIT_VERSION}/download/playit-linux-${playit_arch}"; \

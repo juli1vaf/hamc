@@ -2,18 +2,11 @@
 
 This add-on allows for hosting a Minecraft Java server using Home Assistant. Based on the Minecraft server docker by [itzg](https://github.com/itzg/docker-minecraft-server).
 
+**Current version: 1.3.4** – Builds now normalize common x86_64 and ARM architecture names so the bundled Playit.gg agent downloads correctly on Intel/AMD hosts even when builders omit `BUILD_ARCH`.
+
 ## Configuration
 
 All configuration is done using the add-on options. It allows for setting the environment variables found [here](https://github.com/itzg/docker-minecraft-server).
-
-### Playit.gg tunnel
-
-The add-on bundles the [Playit.gg](https://playit.gg/) agent so the public tunnel can run inside the same container as the Minecraft server. To enable it:
-
-1. Set **PLAYIT_ENABLE** to `true` in the add-on options.
-2. Provide your **PLAYIT_SECRET** (the secret key from your Playit.gg account) so the agent can authenticate.
-
-When enabled, the Playit agent starts automatically alongside the Minecraft server and keeps running for as long as the add-on is active.
 
 ### Playit.gg tunnel
 
