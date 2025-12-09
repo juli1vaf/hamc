@@ -46,12 +46,14 @@ ARG TARGETARCH
 ARG BUILD_ARCH
 ARG PLAYIT_VERSION="latest"
 RUN set -eux; \
-    detected_arch="${BUILD_ARCH:-${TARGETARCH:-$(uname -m)}}"; \
-    case "${detected_arch}" in \
+    : "${TARGETARCH:=}"; \
+    : "${BUILD_ARCH:=${TARGETARCH}}"; \
+    if [ -z "${BUILD_ARCH}" ]; then BUILD_ARCH="$(uname -m)"; fi; \
+    case "${BUILD_ARCH}" in \
         amd64|x86_64) playit_arch="amd64" ;; \
         aarch64|arm64) playit_arch="arm64" ;; \
         armv7|arm) playit_arch="arm" ;; \
-        *) echo "Unsupported architecture: ${detected_arch}" >&2; exit 1 ;; \
+        *) echo "Unsupported architecture: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac; \
     curl -L -o /usr/local/bin/playit "https://github.com/playit-cloud/playit-agent/releases/${PLAYIT_VERSION}/download/playit-linux-${playit_arch}"; \
     chmod +x /usr/local/bin/playit

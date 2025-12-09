@@ -1,5 +1,10 @@
 ## next
 
+## 1.3.3
+
+- Prevent build failures when `BUILD_ARCH` is unset by explicitly defaulting to the Docker target architecture or host machine
+  name before Playit is downloaded.
+
 ## 1.3.2
 
 - Fix Playit agent installation so builds succeed even when both `BUILD_ARCH` and `TARGETARCH` are not supplied by falling back
