@@ -1,5 +1,10 @@
 ## next
 
+## 1.3.4
+
+- Normalize additional Intel/AMD and ARM architecture strings (e.g., `x86_64`, `armv8`) so the Playit agent downloads with the
+  correct binary on Home Assistant builders that omit `BUILD_ARCH`.
+
 ## 1.3.3
 
 - Prevent build failures when `BUILD_ARCH` is unset by explicitly defaulting to the Docker target architecture or host machine
