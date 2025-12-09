@@ -11,55 +11,36 @@ if bashio::config.true 'PLAYIT_ENABLE'; then
 
         mkdir -p /var/log /var/run
         playit_log="/var/log/playit.log"
-        playit_config="/data/playit.toml"
-        playit_cmd=(/usr/local/bin/playit agent)
 
-        # Extract provided secret
+        # Secret from add-on config
         provided_secret="$(bashio::config 'PLAYIT_SECRET')"
 
-        #
-        # 1. If config file exists, check its compatibility
-        #
-        if [ -f "${playit_config}" ]; then
+        # Ask the Playit binary where it expects its secret file
+        secret_path="$(
+            /usr/local/bin/playit secret-path 2>/dev/null | head -n 1 | tr -d '\r'
+        )"
 
-            # Detect deprecated configs containing "--config"
-            if grep -q -- "--config" "${playit_config}"; then
-                bashio::log.notice "Detected legacy playit.toml with deprecated --config flag."
-                bashio::log.notice "Renaming ${playit_config} → ${playit_config}.legacy"
-                mv "${playit_config}" "${playit_config}.legacy"
+        if [ -z "${secret_path}" ]; then
+            bashio::log.warning "Could not determine Playit secret path, falling back to direct --secret usage."
+            /usr/local/bin/playit \
+                --secret "${provided_secret}" \
+                start >> "${playit_log}" 2>&1 &
+        else
+            # Make sure directory exists
+            mkdir -p "$(dirname "${secret_path}")"
 
-            else
-                #
-                # 2. Check if the stored secret matches the provided one
-                #
-                if grep -q "secret_key" "${playit_config}"; then
-                    stored_secret="$(grep 'secret_key' "${playit_config}" \
-                        | head -1 \
-                        | sed 's/secret_key *= *"//' | sed 's/"//')"
+            # Always sync the secret file with the configured secret
+            printf '%s\n' "${provided_secret}" > "${secret_path}"
+            bashio::log.info "Wrote Playit secret to ${secret_path}"
 
-                    if [ "${stored_secret}" != "${provided_secret}" ]; then
-                        bashio::log.warning "playit.toml contains an outdated secret key."
-                        bashio::log.warning "Replacing it so Playit can regenerate a correct config."
-
-                        mv "${playit_config}" "${playit_config}.oldsecret"
-                    else
-                        # Same secret → safe to reuse config
-                        bashio::log.info "playit.toml matches the provided secret — reusing existing configuration."
-                        playit_cmd+=(--config-path "${playit_config}")
-                    fi
-
-                else
-                    # No stored secret → reuse config anyway
-                    bashio::log.info "playit.toml has no stored secret key — reusing configuration."
-                    playit_cmd+=(--config-path "${playit_config}")
-                fi
-            fi
+            # Start agent using the secret file
+            /usr/local/bin/playit \
+                --secret_path "${secret_path}" \
+                --stdout \
+                --log_path "${playit_log}" \
+                start >> "${playit_log}" 2>&1 &
         fi
 
-        #
-        # 3. Start Playit agent with the secret key
-        #
-        SECRET_KEY="${provided_secret}" "${playit_cmd[@]}" >> "${playit_log}" 2>&1 &
         pid=$!
         echo "${pid}" > /var/run/playit.pid
         bashio::log.info "Playit.gg agent started with PID ${pid}"
